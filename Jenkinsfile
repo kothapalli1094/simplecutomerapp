@@ -114,6 +114,7 @@ pipeline {
                     }
                 }
             }
+		}
         
 		 stage("Slack Notification") {
             steps {
@@ -125,5 +126,4 @@ pipeline {
             }
         }
     }
-}
 }
