@@ -86,7 +86,7 @@ pipeline {
 
 		stage("Deploy to Tomcat") {
     steps {
-        withCredentials([usernamePassword(credentialsId: 'tomcat', usernameVariable: 'TOMCAT_USER', passwordVariable: 'TOMCAT_PASS')]) {
+        withCredentials([usernamePassword(credentialsId: 'tomcat_credentials', usernameVariable: 'TOMCAT_USER', passwordVariable: 'TOMCAT_PASS')]) {
             script {
                 // Find the WAR file built by Maven
                 def warFile = sh(script: "ls target/*.war | head -n 1", returnStdout: true).trim()
