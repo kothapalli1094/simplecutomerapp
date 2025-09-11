@@ -11,11 +11,11 @@ pipeline {
         // This can be http or https
         NEXUS_PROTOCOL = "http"
         // Where your Nexus is running
-        NEXUS_URL = "18.221.189.193:8081/"
+        NEXUS_URL = "3.92.191.162:8081"
         // Repository where we will upload the artifact
-        NEXUS_REPOSITORY = "sonarqube"
+        NEXUS_REPOSITORY = "Declarative-app"
         // Jenkins credential id to authenticate to Nexus OSS
-        NEXUS_CREDENTIAL_ID = "nexus_keygen"
+        NEXUS_CREDENTIAL_ID = "Nexus_server"
 	SCANNER_HOME = tool 'sonar_scanner'
     }
     stages {
@@ -23,10 +23,12 @@ pipeline {
             steps {
                 script {
                     // Let's clone the source
-                    git 'https://github.com/betawins/sabear_simplecutomerapp.git';
+                    git 'https://github.com/kothapalli1094/simplecutomerapp.git';
+					echo '✅ Repository cloned successfully from feature-1.1 branch'
                 }
             }
         }
+		
         stage("mvn build") {
             steps {
                 script {
@@ -38,7 +40,7 @@ pipeline {
         }
 	stage('SonarCloud') {
             steps {
-                withSonarQubeEnv('sonarqube_server') {
+                withSonarQubeEnv('SonarQube') {
 				sh '$SCANNER_HOME/bin/sonar-scanner \
 				-Dsonar.projectKey=Ncodeit \
 				-Dsonar.projectName=Ncodeit \
@@ -50,7 +52,7 @@ pipeline {
 				-Dsonar.java.binaries=src/com/room/sample '
 				
 		     }
-		}
+		  }
 	    }
         stage("publish to nexus") {
             steps {
@@ -92,6 +94,34 @@ pipeline {
                         error "*** File: ${artifactPath}, could not be found";
                     }
                 }
+            }
+        }
+		stage("Deploy to Tomcat") {
+    steps {
+        withCredentials([usernamePassword(credentialsId: 'tomcat', usernameVariable: 'TOMCAT_USER', passwordVariable: 'TOMCAT_PASS')]) {
+            script {
+                // Find the WAR file built by Maven
+                def warFile = sh(script: "ls target/*.war | head -n 1", returnStdout: true).trim()
+
+                echo "Deploying ${warFile} to Tomcat at context path /simplecustomerapp ..."
+
+                sh """
+                    curl -u $TOMCAT_USER:$TOMCAT_PASS \
+                         -T ${warFile} \
+                         "http://54.91.10.42:8080/manager/text/deploy?path=/simplecustomerapp&update=true"
+        
+                        """
+                    }
+                }
+            }
+        
+		 stage("Slack Notification") {
+            steps {
+                slackSend(
+                    channel: "${SLACK_CHANNEL}",
+                    color: "#36a64f",
+                    message: "Declarative pipeline for *Simple Customer App* has been successfully deployed in Tomcat ✅ by SNL for Job: ${env.JOB_NAME} [${env.BUILD_NUMBER}]"
+                )
             }
         }
     }
