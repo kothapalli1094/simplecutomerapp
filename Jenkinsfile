@@ -16,7 +16,7 @@ pipeline {
         NEXUS_REPOSITORY = "Declarative-app"
         // Jenkins credential id to authenticate to Nexus OSS
         NEXUS_CREDENTIAL_ID = "Nexus_server"
-	SCANNER_HOME = tool 'sonar_scanner'
+	SCANNER_HOME = tool 'SonarQube'
     }
     stages {
         stage("clone code") {
