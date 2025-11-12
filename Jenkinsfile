@@ -1,6 +1,11 @@
 pipeline {
     agent any
 
+    options {
+        timestamps()
+        ansiColor('xterm')
+    }
+
     tools {
         // Must match names from "Manage Jenkins → Global Tool Configuration"
         maven 'mvn3'
@@ -14,11 +19,11 @@ pipeline {
         NEXUS_REPOSITORY = 'devops'
         NEXUS_CREDENTIAL_ID = 'nexus'
 
-        // SonarQube configuration (from Jenkins)
+        // SonarQube configuration
         SCANNER_HOME = tool 'sonar'
         SONARQUBE_ENV = 'sonar'
 
-        // Tomcat credentials (configured in Jenkins credentials)
+        // Tomcat credentials
         TOMCAT_CRED = 'tomcat_credentials'
 
         // Git repository
@@ -67,19 +72,23 @@ pipeline {
         stage('Publish to Nexus') {
             steps {
                 echo "📦 Uploading artifact to Nexus..."
-                sh '''
-                    ARTIFACT=$(ls target/*.war | head -n 1)
-                    echo "Found artifact: $ARTIFACT"
-                    mvn deploy:deploy-file \
-                      -DgroupId=com.javatpoint \
-                      -DartifactId=${APP_NAME} \
-                      -Dversion=${APP_VERSION} \
-                      -Dpackaging=war \
-                      -Dfile=$ARTIFACT \
-                      -DrepositoryId=${NEXUS_CREDENTIAL_ID} \
-                      -Durl=${NEXUS_PROTOCOL}://${NEXUS_URL}/repository/${NEXUS_REPOSITORY} \
-                      -DgeneratePom=true
-                '''
+                withCredentials([usernamePassword(credentialsId: "${NEXUS_CREDENTIAL_ID}", usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+                    sh '''
+                        ARTIFACT=$(ls target/*.war | head -n 1)
+                        echo "Found artifact: $ARTIFACT"
+                        mvn deploy:deploy-file \
+                          -DgroupId=com.javatpoint \
+                          -DartifactId=${APP_NAME} \
+                          -Dversion=${APP_VERSION} \
+                          -Dpackaging=war \
+                          -Dfile=$ARTIFACT \
+                          -DrepositoryId=${NEXUS_CREDENTIAL_ID} \
+                          -Durl=${NEXUS_PROTOCOL}://${NEXUS_URL}/repository/${NEXUS_REPOSITORY} \
+                          -DgeneratePom=true \
+                          -Dusername=$NEXUS_USER \
+                          -Dpassword=$NEXUS_PASS
+                    '''
+                }
                 echo "✅ Artifact successfully published to Nexus"
             }
         }
