@@ -11,12 +11,12 @@ pipeline {
         // This can be http or https
         NEXUS_PROTOCOL = "http"
         // Where your Nexus is running
-        NEXUS_URL = "3.92.191.162:8081"
+        NEXUS_URL = "54.145.245.39:8081"
         // Repository where we will upload the artifact
-        NEXUS_REPOSITORY = "Declarative-app"
+        NEXUS_REPOSITORY = "devops"
         // Jenkins credential id to authenticate to Nexus OSS
-        NEXUS_CREDENTIAL_ID = "Nexus_server"
-	SCANNER_HOME = tool 'sonar-scanner'
+        NEXUS_CREDENTIAL_ID = "nexus"
+	SCANNER_HOME = tool 'sonar'
     }
     stages {
         stage("clone code") {
@@ -96,7 +96,7 @@ pipeline {
                 sh """
                     curl -u $TOMCAT_USER:$TOMCAT_PASS \
                          -T ${warFile} \
-                         "http://54.91.10.42:8080/manager/text/deploy?path=/simplecustomerapp&update=true"
+                         "http://54.145.245.39:8080/manager/text/deploy?path=/simplecustomerapp&update=true"
         
                         """
                     }
