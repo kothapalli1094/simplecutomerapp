@@ -68,7 +68,7 @@ pipeline {
         stage('Publish to Nexus') {
             steps {
                 echo "📦 Uploading artifact to Nexus..."
-                withCredentials([usernamePassword(credentialsId: "${NEXUS_CREDENTIAL_ID}", usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+                withCredentials([usernamePassword(credentialsId: "${NEXUS_CREDENTIAL_ID}")]) {
                     sh '''
                         ARTIFACT=$(ls target/*.war | head -n 1)
                         echo "Found artifact: $ARTIFACT"
