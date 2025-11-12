@@ -38,21 +38,20 @@ pipeline {
                 }
             }
         }
-	stage('SonarCloud') {
-            steps {
-                withSonarQubeEnv('sonar') {
-				sh '$SCANNER_HOME/bin/sonar \
-				-Dsonar.projectKey=Ncodeit \
-				-Dsonar.projectName=Ncodeit \
-				-Dsonar.projectVersion=2.0 \
-				-Dsonar.sources=/var/lib/jenkins/workspace/$JOB_NAME/src/ \
-				-Dsonar.binaries=target/classes/com/visualpathit/account/controller/ \
-				-Dsonar.junit.reportsPath=target/surefire-reports \
-				-Dsonar.jacoco.reportPath=target/jacoco.exec \
-				-Dsonar.java.binaries=src/com/room/sample '
-				
-		     }
-		  }
+	stage('SonarQube Analysis') {
+    def scannerHome = tool 'sonar'      // Name configured under "Global Tool Configuration"
+    withSonarQubeEnv('sonar') {         // Name configured under "Configure System" → SonarQube Servers
+        sh """
+        ${scannerHome}/bin/sonar-scanner \
+          -Dsonar.projectKey=Ncodeit \
+          -Dsonar.projectName=Ncodeit \
+          -Dsonar.projectVersion=3.0 \
+          -Dsonar.sources=src \
+          -Dsonar.java.binaries=target/classes \
+          -Dsonar.host.url=http://54.145.245.39:9000
+        """
+               }
+            }
 	    }
        stage("publish to nexus") {
             steps {
