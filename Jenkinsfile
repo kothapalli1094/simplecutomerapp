@@ -1,7 +1,6 @@
 pipeline {
     agent any
 
-
     tools {
         // Must match names from "Manage Jenkins → Global Tool Configuration"
         maven 'mvn3'
@@ -60,15 +59,15 @@ pipeline {
                           -Dsonar.java.binaries=target \
                           -Dsonar.host.url=http://54.145.245.39:9000
                     '''
-                    echo "✅ SonarQube scan triggered successfully."
                 }
+                echo "✅ SonarQube scan triggered successfully."
             }
         }
 
         stage('Publish to Nexus') {
             steps {
                 echo "📦 Uploading artifact to Nexus..."
-                withCredentials([usernamePassword(credentialsId: "${NEXUS_CREDENTIAL_ID}")]) {
+                withCredentials([usernamePassword(credentialsId: "${NEXUS_CREDENTIAL_ID}", usernameVariable: 'NX_USER', passwordVariable: 'NX_PASS')]) {
                     sh '''
                         ARTIFACT=$(ls target/*.war | head -n 1)
                         echo "Found artifact: $ARTIFACT"
@@ -81,8 +80,8 @@ pipeline {
                           -DrepositoryId=${NEXUS_CREDENTIAL_ID} \
                           -Durl=${NEXUS_PROTOCOL}://${NEXUS_URL}/repository/${NEXUS_REPOSITORY} \
                           -DgeneratePom=true \
-                          -Dusername=$NEXUS_USER \
-                          -Dpassword=$NEXUS_PASS
+                          -Dusername=$NX_USER \
+                          -Dpassword=$NX_PASS
                     '''
                 }
                 echo "✅ Artifact successfully published to Nexus"
@@ -107,16 +106,17 @@ pipeline {
 
         stage('Slack Notification') {
             steps {
-                echo "💬 Sending Slack Notification..."
+                echo "💬 Slack Notification Stage"
                 script {
                     try {
+                        // This block will only work if Slack plugin is installed
                         slackSend(
                             channel: '#jenkins-integration',
                             color: '#36a64f',
                             message: "✅ *${APP_NAME}* successfully built and deployed! \nJob: ${env.JOB_NAME} #${env.BUILD_NUMBER}"
                         )
                     } catch (err) {
-                        echo "⚠️ Slack notification failed or not configured: ${err.message}"
+                        echo "⚠️ Slack plugin not installed or misconfigured: ${err.message}"
                     }
                 }
             }
@@ -126,6 +126,7 @@ pipeline {
     post {
         failure {
             script {
+                echo "❌ Build failed for Job: ${env.JOB_NAME} #${env.BUILD_NUMBER}"
                 try {
                     slackSend(
                         channel: '#jenkins-integration',
