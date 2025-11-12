@@ -1,10 +1,6 @@
 pipeline {
     agent any
 
-    options {
-        timestamps()
-        ansiColor('xterm')
-    }
 
     tools {
         // Must match names from "Manage Jenkins → Global Tool Configuration"
