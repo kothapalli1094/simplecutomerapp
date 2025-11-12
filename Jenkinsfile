@@ -18,9 +18,6 @@ pipeline {
         SCANNER_HOME = tool 'sonar'
         SONARQUBE_ENV = 'sonar'
 
-        // Tomcat credentials
-        TOMCAT_CRED = 'tomcat_credentials'
-
         // Git repository
         GIT_URL = 'https://github.com/kothapalli1094/simplecutomerapp.git'
         GIT_BRANCH = 'feature-1.1'
@@ -91,15 +88,15 @@ pipeline {
         stage('Deploy to Tomcat') {
             steps {
                 echo "🚀 Deploying WAR file to Tomcat..."
-                withCredentials([usernamePassword(credentialsId: "${TOMCAT_CRED}", usernameVariable: 'TOMCAT_USER', passwordVariable: 'TOMCAT_PASS')]) {
-                    sh '''
-                        WAR_FILE=$(ls target/*.war | head -n 1)
-                        echo "Deploying $WAR_FILE to Tomcat..."
-                        curl -u $TOMCAT_USER:$TOMCAT_PASS \
-                             -T $WAR_FILE \
-                             "http://54.145.245.39:8080/manager/text/deploy?path=/simplecustomerapp&update=true"
-                    '''
-                }
+                sh '''
+                    WAR_FILE=$(ls target/*.war | head -n 1)
+                    echo "Deploying $WAR_FILE to Tomcat..."
+
+                    # If your Tomcat manager requires login, use: curl -u tomcat:tomcat ...
+                    # If authentication is disabled (test setup), just use plain curl:
+                    curl -T $WAR_FILE \
+                         "http://54.145.245.39:8080/manager/text/deploy?path=/simplecustomerapp&update=true"
+                '''
                 echo "✅ Deployment to Tomcat successful!"
             }
         }
@@ -109,7 +106,6 @@ pipeline {
                 echo "💬 Slack Notification Stage"
                 script {
                     try {
-                        // This block will only work if Slack plugin is installed
                         slackSend(
                             channel: '#jenkins-integration',
                             color: '#36a64f',
